@@ -1,0 +1,27 @@
+{
+    "defaults": {
+      "authors": "Zazk0u",
+      "source": "https://github.com/Zazk0u/bl-sdk-mods/",
+      "supports": ["BL2", "TPS", "AoDK"],
+      "license": "GNU GPLv3"
+    },
+    "mods": [
+      {
+        "name": "Open Sesame",
+        "description": [
+          "It allows you to open chests and containers by damaging them.\n",
+          "Currently, does not allow chests and containers that cost currencies."
+        ],
+        "tagline": [
+          "Open chests and containers by damaging them."
+        ],
+        "supports": ["BL2", "TPS"],
+        "types": ["Gameplay"],
+        "latest": "1.1",
+        "versions": {
+          "1.0": "https://github.com/Zazk0u/bl-sdk-mods/blob/main/OpenSesame/OpenSesame.zip"
+        },
+        "requirements": {}
+      }
+    ]
+  }
