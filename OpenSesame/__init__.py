@@ -5,43 +5,44 @@ class OpenSesame(SDKMod):
 	Name: str = "Open Sesame"
 	Author: str = "Zazk0u"
 	Description: str = "Allow you to damage chests and containers to open them."
-	Version: str = "1.0.0"
+	Version: str = "1.1.0"
 	Types: ModTypes = ModTypes.Gameplay
 	SaveEnabledState: EnabledSaveType = EnabledSaveType.LoadOnMainMenu
 	
-	INTERACTIVE_OBJECT_CLASS: unrealsdk.UClass = unrealsdk.FindClass("WillowInteractiveObject")
-	ALLEGIANCE: unrealsdk.UObject = unrealsdk.FindObject("PawnAllegiance", "GD_AI_Allegiance.Allegiance_Player")
+	BASE_INTERACTIVE_OBJECT_CLASS: unrealsdk.UClass = unrealsdk.FindClass("WillowInteractiveObject")
+	ALLEGIANCE: unrealsdk.UObject 					= unrealsdk.FindObject("PawnAllegiance", "GD_AI_Allegiance.Allegiance_FullNeutral")
 
+	def has_loot_and_base_class(self, WIO)-> bool:
+		return WIO.Loot and WIO.Class is self.BASE_INTERACTIVE_OBJECT_CLASS
+		
 	@Hook("WillowGame.WillowInteractiveObject.InitializeFromDefinition")
-	def on_initialize(
-		self, this: unrealsdk.UObject, function: unrealsdk.UFunction, params: unrealsdk.FStruct
-	)-> bool:
-		#Check if the object's class name is correct and has loot.
-		if not this.Loot or this.Class is not self.INTERACTIVE_OBJECT_CLASS: 
+	def on_initialize(self, WIO: unrealsdk.UObject, function: unrealsdk.UFunction, params: unrealsdk.FStruct)-> bool:
+		IO_definition = WIO.Definition
+
+		if not IO_definition or not self.has_loot_and_base_class(WIO): 
 			return True
-		#Set allegiance to player which prevent damaged enemy events to work. bCanTakeDirectDamage check for vanilla objects that could receive damage and exclude them, cause Anarchy prestackers would kill me.
-		if not params.Definition.Allegiance and not params.Definition.bCanTakeDirectDamage: 
-			params.Definition.Allegiance = self.ALLEGIANCE
-			
-		params.Definition.bCanTakeDirectDamage = True  
-		params.Definition.bCanTakeRadiusDamage = True
+		
+		# Prevent on damage enemies checks by settings the allegiance to neutral.
+		# bCanTakeDirectDamage check for any vanilla objects that could already receive damage and exclude them, specifically so Anarchy prestackers can still stack from some containers.
+		if not IO_definition.Allegiance and not IO_definition.bCanTakeDirectDamage: 
+			IO_definition.Allegiance = self.ALLEGIANCE
+		
+		# This allow the WillowInteractiveObject TakeDamage method to be called.
+		IO_definition.bCanTakeDirectDamage = True  
+		IO_definition.bCanTakeRadiusDamage = True
 		return True
 	
 	@Hook("WillowGame.WillowInteractiveObject.TakeDamage")
-	def on_take_damage(
-		self, this: unrealsdk.UObject, function: unrealsdk.UFunction, params: unrealsdk.FStruct
-	)-> bool:
-		#Check if the damage was dealt by a player.
-		if not params.EventInstigator.Pawn.IsHumanControlled(): 
-			return True
-		#Check if the object's class name is correct and has loot.
-		if not this.Loot or this.Class is not self.INTERACTIVE_OBJECT_CLASS: 
-			return True
-		#Check if the object cost nothing and can be used.
-		if this.bCostsToUse[0] != 0 or this.bCanBeUsed[0] != 1: 
+	def on_take_damage(self, WIO: unrealsdk.UObject, function: unrealsdk.UFunction, params: unrealsdk.FStruct)-> bool:
+		controller = params.EventInstigator
+
+		if not controller or not controller.bIsHumanPlayer or not self.has_loot_and_base_class(WIO): 
 			return True
 
-		this.UseObject(params.EventInstigator.Pawn, None, 0)
+		if not WIO.bCostsToUse[0] == 0 or not WIO.bCanBeUsed[0] == 1: 
+			return True
+
+		WIO.UseObject(controller.Pawn, None, 0)
 		return True
 
 	def Enable(self) -> None:
@@ -52,4 +53,3 @@ class OpenSesame(SDKMod):
 
 ...
 RegisterMod(OpenSesame())
-
