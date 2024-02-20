@@ -17,7 +17,7 @@
         ],
         "supports": ["BL2", "TPS"],
         "types": ["Gameplay"],
-        "latest": "1.1",
+        "latest": "1.0",
         "versions": {
           "1.1": "https://github.com/Zazk0u/bl-sdk-mods/blob/main/OpenSesame/OpenSesame.zip"
         },
